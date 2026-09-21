@@ -35,7 +35,7 @@ async def parse_resume(file: UploadFile = File(...)):
 
     try:
         # PDF → text
-       resume_text = extract_resume(temp_path)
+        resume_text = extract_resume(temp_path)
 
         if not resume_text.strip():
             raise HTTPException(
