@@ -1,4 +1,5 @@
 import os
+import time
 import tempfile
 from pathlib import Path
 
@@ -26,12 +27,9 @@ app = FastAPI(
 # ============================================================
 
 origins = [
-    # Local development
     "http://localhost:3000",
     "http://localhost:5173",
-
-    # Firebase Hosting
-    "https://resume-analyser-3195c.web.app"
+    "https://resume-analyser-3195c.web.app",
 ]
 
 
@@ -107,16 +105,31 @@ async def parse_resume(file: UploadFile = File(...)):
             temp_file.write(contents)
             temp_path = temp_file.name
 
+        print("=" * 60)
         print(f"[API] Processing resume: {file.filename}")
         print(f"[API] Temporary file: {temp_path}")
+        print("=" * 60)
 
         # ----------------------------------------------------
-        # Extract text from resume
+        # Extract resume text
         # ----------------------------------------------------
 
         print("[API] Extracting resume text...")
 
+        extraction_start = time.time()
+
         resume_text = extract_resume(temp_path)
+
+        extraction_time = time.time() - extraction_start
+
+        print(
+            f"[TIME] Resume extraction: "
+            f"{extraction_time:.2f} seconds"
+        )
+
+        # ----------------------------------------------------
+        # Validate extracted text
+        # ----------------------------------------------------
 
         if not resume_text:
             raise HTTPException(
@@ -141,9 +154,25 @@ async def parse_resume(file: UploadFile = File(...)):
 
         print("[API] Parsing resume with AI...")
 
+        parsing_start = time.time()
+
         resume = resume_parse(resume_text)
 
+        parsing_time = time.time() - parsing_start
+
+        print(
+            f"[TIME] AI parsing: "
+            f"{parsing_time:.2f} seconds"
+        )
+
+        print("=" * 60)
+        print(
+            f"[TIME] TOTAL: "
+            f"{time.time() - extraction_start:.2f} seconds "
+            f"(from extraction start)"
+        )
         print("[API] Resume parsed successfully.")
+        print("=" * 60)
 
         # ----------------------------------------------------
         # Return structured response
@@ -182,12 +211,17 @@ async def parse_resume(file: UploadFile = File(...)):
     finally:
 
         if temp_path:
+
             try:
+
                 Path(temp_path).unlink(missing_ok=True)
+
                 print("[API] Temporary file deleted.")
+
             except Exception as cleanup_error:
+
                 print(
-                    f"[WARNING] Could not delete temporary file: "
+                    "[WARNING] Could not delete temporary file: "
                     f"{cleanup_error}"
                 )
 
@@ -202,7 +236,9 @@ if __name__ == "__main__":
         os.environ.get("PORT", 8000)
     )
 
-    print(f"[API] Starting server on port {port}")
+    print(
+        f"[API] Starting server on port {port}"
+    )
 
     uvicorn.run(
         "main:app",
