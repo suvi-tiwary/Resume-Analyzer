@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from pathlib import Path
 import tempfile
 
-from Resume_loaders import extract_pdf
+from Resume_loaders import extract_resume
 from Resume_parser import resume_parse
 
 
@@ -35,7 +35,7 @@ async def parse_resume(file: UploadFile = File(...)):
 
     try:
         # PDF → text
-        resume_text = extract_pdf(temp_path)
+       resume_text = extract_resume(temp_path)
 
         if not resume_text.strip():
             raise HTTPException(
