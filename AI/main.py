@@ -11,7 +11,7 @@ app = FastAPI()
 origins = [
     "http://localhost:3000",      # For local React development
     "http://localhost:5173",      # For local Vite/React development
-    "https://resume-analyser-3195c.web.app/",  # Change this to your actual Vercel frontend URL
+    "https://resume-analyser-3195c.web.app",  # Change this to your actual Vercel frontend URL
 ]
 
 # 3. Apply the CORS Middleware to the app
