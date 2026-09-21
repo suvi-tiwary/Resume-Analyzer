@@ -9,5 +9,6 @@ langchain-community
 
 pypdf
 pillow
-pytesseract
 pydantic
+pdf2image
+easyocr
