@@ -3,17 +3,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from schema import Resume
 import os
 from dotenv import load_dotenv
-load_dotenv
+from functools import lru_cache
 
-
-llm = ChatGroq(
-    model="openai/gpt-oss-20b",
-    temperature=0,
-    api_key=os.getenv("GROQ_API_KEY"),
-)
-
-
-structured_llm = llm.with_structured_output(Resume)
+load_dotenv()
 
 
 prompt = ChatPromptTemplate.from_messages([
@@ -45,9 +37,19 @@ prompt = ChatPromptTemplate.from_messages([
 ])
 
 
+@lru_cache(maxsize=1)
+def get_structured_llm():
+    llm = ChatGroq(
+        model="openai/gpt-oss-20b",
+        temperature=0,
+        api_key=os.getenv("GROQ_API_KEY"),
+    )
+    return llm.with_structured_output(Resume)
+
+
 def resume_parse(resume_text: str) -> Resume:
 
-    chain = prompt | structured_llm
+    chain = prompt | get_structured_llm()
 
     result = chain.invoke({
         "resume_text": resume_text
