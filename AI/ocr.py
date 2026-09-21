@@ -27,7 +27,7 @@ def ocr_pdf(pdf_path: str) -> str:
 
     pages = convert_from_path(
         pdf_path,
-        dpi=200
+        dpi=150
     )
 
     extracted_text = []

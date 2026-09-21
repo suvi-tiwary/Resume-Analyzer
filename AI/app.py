@@ -1,7 +1,7 @@
 import requests
 import json
 
-resume_path = r"AI/Suvi Tiwary Resume.pdf"
+resume_path = r"AI/scanned_resume_test.pdf"
 
 with open(resume_path, "rb") as file:
     response = requests.post(
