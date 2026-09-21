@@ -1,13 +1,8 @@
 fastapi
 uvicorn[standard]
 python-multipart
-python-dotenv
-
-langchain
-langchain-groq
-langchain-community
-
-pypdf
+pydantic
+pymupdf
 pillow
 pytesseract
-pydantic
+python-dotenv

@@ -1,11 +1,10 @@
-from dotenv import load_dotenv
-from Resume_loaders import exatract_pdf
-load_dotenv()
+"""
+Root main entrypoint.
+Allows running with either:
+  uvicorn main:app --reload
+or:
+  uvicorn app.main:app --reload
+"""
+from app.main import app
 
-
-
-text = exatract_pdf("AI/suvi.pdf")
-
-print(text)
-
-
+__all__ = ["app"]

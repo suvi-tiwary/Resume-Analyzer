@@ -1,24 +1,11 @@
-from pydantic import BaseModel
-from typing import List
+"""
+Legacy schema module kept for backward compatibility.
+New code should import from app.schemas.resume.
+"""
+from app.schemas.resume import (
+    EducationItem as Education,
+    WorkExperienceItem as workExperience,
+    ResumeResponse as Resume,
+)
 
-class Education(BaseModel):
-    school:str
-    collge:str
-    degree:str
-    start_year:str
-    end_year:str
-
-class workExperience(BaseModel):
-    company:str
-    position:str
-    years:int
-    description:str
-
-class Resume(BaseModel):
-    name:str
-    email:str
-    skills:list[str]
-    education:List[Education]    
-    work_experience=List[workExperience]
-
-
+__all__ = ["Education", "workExperience", "Resume"]
