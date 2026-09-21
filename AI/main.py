@@ -31,8 +31,7 @@ origins = [
     "http://localhost:5173",
 
     # Firebase Hosting
-    "https://resume-analyser-3195c.web.app",
-    "https://resume-analyser-3195c.firebaseapp.com",
+    "https://resume-analyser-3195c.web.app"
 ]
 
 
@@ -54,18 +53,6 @@ def home():
     return {
         "message": "Resume Analyzer API is running",
         "status": "success"
-    }
-
-
-# ============================================================
-# HEALTH CHECK
-# ============================================================
-
-@app.get("/health")
-def health_check():
-    return {
-        "status": "ok",
-        "service": "resume-analyzer"
     }
 
 
