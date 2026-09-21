@@ -1,31 +1,25 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+import os
 from pathlib import Path
 import tempfile
-
-from Resume_loaders import extract_resume
-from Resume_parser import resume_parse
-import os
+from fastapi import FastAPI, UploadFile, File, HTTPException
 import uvicorn
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
-
+# 1. ALWAYS initialize the app at the top
 app = FastAPI()
-
 
 @app.get("/")
 def home():
     return {"message": "Resume Analyzer API is running"}
 
-
 @app.get("/health")
 def health_check():
     return {"status": "ok", "service": "resume-analyzer"}
 
-
 @app.post("/parse-resume")
 async def parse_resume(file: UploadFile = File(...)):
+    # 2. Lazy imports inside the route function to save massive amounts of RAM
+    from Resume_loaders import extract_resume
+    from Resume_parser import resume_parse
 
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
@@ -39,7 +33,6 @@ async def parse_resume(file: UploadFile = File(...)):
         delete=False,
         suffix=".pdf"
     ) as temp_file:
-
         temp_file.write(contents)
         temp_path = temp_file.name
 
@@ -55,7 +48,6 @@ async def parse_resume(file: UploadFile = File(...)):
 
         # text → structured resume
         resume = resume_parse(resume_text)
-
         return resume.model_dump()
 
     except HTTPException:
@@ -65,6 +57,10 @@ async def parse_resume(file: UploadFile = File(...)):
             status_code=500,
             detail=str(e)
         )
-
     finally:
         Path(temp_path).unlink(missing_ok=True)
+
+# 3. Execution block must always stay at the absolute bottom
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)

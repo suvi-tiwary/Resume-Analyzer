@@ -12,3 +12,4 @@ pillow
 pydantic
 pdf2image
 easyocr
+requests
