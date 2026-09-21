@@ -28,7 +28,7 @@ app = FastAPI(
 origins = [
     # Local development
     "http://localhost:3000",
-    "http://localhost:5173",
+    "http://localhost:5173/",
 
     # Firebase Hosting
     "https://resume-analyser-3195c.web.app"
