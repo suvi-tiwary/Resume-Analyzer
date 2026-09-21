@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+
+langchain
+langchain-groq
+langchain-community
+
+pypdf
+pillow
+pytesseract
+pydantic
