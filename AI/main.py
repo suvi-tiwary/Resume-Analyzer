@@ -19,6 +19,11 @@ def home():
     return {"message": "Resume Analyzer API is running"}
 
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "service": "resume-analyzer"}
+
+
 @app.post("/parse-resume")
 async def parse_resume(file: UploadFile = File(...)):
 
@@ -53,6 +58,8 @@ async def parse_resume(file: UploadFile = File(...)):
 
         return resume.model_dump()
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
