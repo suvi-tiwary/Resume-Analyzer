@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+
+langchain
+langchain-groq
+langchain-community
+
+pypdf
+pillow
+pydantic
+pdf2image
+easyocr
+requests 
