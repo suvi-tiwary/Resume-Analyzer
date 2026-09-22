@@ -1,59 +1,102 @@
-import { useState } from "react";
-import {
-  Upload,
-  FileText,
-  FileImage,
-  Sparkles,
-  ShieldCheck,
-  Zap,
-  AlertCircle,
-  X,
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { Sparkles } from "lucide-react";
+import UploadBox from "./components/UploadBox";
+import ProcessingState from "./components/ProcessingState";
+import ResumeResult from "./components/ResumeResult";
+import ErrorState from "./components/ErrorState";
+import { parseResume, warmBackend } from "./services/api";
 import "./App.css";
 
 function App() {
-  const [file, setFile] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
+  // Pre-warm the Render backend on first load to avoid cold-start timeouts
+  useEffect(() => {
+    warmBackend();
+  }, []);
 
-  const handleFile = (selectedFile) => {
-    if (!selectedFile) return;
+  // Core Application State
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const [resumeData, setResumeData] = useState(null);
+  const [error, setError] = useState(null);
+  const [inlineError, setInlineError] = useState(null);
 
-    const allowedTypes = [
-      "application/pdf",
-      "image/jpeg",
-      "image/png",
-    ];
-
-    if (!allowedTypes.includes(selectedFile.type)) {
-      alert("Please upload a PDF, JPG, or PNG file.");
+  /**
+   * Handles file selection with validation
+   */
+  const handleFileSelect = (file, validationError) => {
+    if (validationError) {
+      setInlineError(validationError);
+      setSelectedFile(null);
       return;
     }
 
-    setFile(selectedFile);
+    setInlineError(null);
+    setSelectedFile(file);
   };
 
-  const handleInputChange = (event) => {
-    const selectedFile = event.target.files?.[0];
-    handleFile(selectedFile);
+  /**
+   * Removes selected file
+   */
+  const handleFileRemove = () => {
+    setSelectedFile(null);
+    setInlineError(null);
   };
 
-  const handleDrop = (event) => {
-    event.preventDefault();
-    setIsDragging(false);
+  /**
+   * Triggers the resume analysis flow
+   */
+  const handleAnalyze = async () => {
+    if (!selectedFile) return;
 
-    const droppedFile = event.dataTransfer.files?.[0];
-    handleFile(droppedFile);
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const data = await parseResume(selectedFile);
+      setResumeData(data);
+      setIsProcessing(false);
+      setIsComplete(true);
+    } catch (err) {
+      setIsProcessing(false);
+      setError(
+        err.message ||
+          "Something went wrong while processing your file. Please try again."
+      );
+    }
   };
 
-  const removeFile = () => {
-    setFile(null);
+  /**
+   * Resets the entire application back to upload state
+   */
+  const handleReset = () => {
+    setSelectedFile(null);
+    setIsProcessing(false);
+    setIsComplete(false);
+    setResumeData(null);
+    setError(null);
+    setInlineError(null);
+  };
+
+  /**
+   * Resets from error state back to upload state
+   */
+  const handleRetry = () => {
+    setError(null);
+    setIsProcessing(false);
+    setIsComplete(false);
   };
 
   return (
     <div className="app">
       {/* Header */}
       <header className="header">
-        <div className="brand">
+        <button
+          className="brand"
+          onClick={handleReset}
+          title="Go to Home"
+          type="button"
+        >
           <div className="brand-icon">
             <Sparkles size={20} />
           </div>
@@ -62,7 +105,7 @@ function App() {
             <h2>Resume Analyzer</h2>
             <span>AI-powered resume parsing</span>
           </div>
-        </div>
+        </button>
 
         <div className="header-status">
           <span className="status-dot"></span>
@@ -70,164 +113,35 @@ function App() {
         </div>
       </header>
 
-      {/* Main */}
+      {/* Main Content Area with State Flow */}
       <main className="main">
-        <section className="hero">
-          <div className="badge">
-            <Sparkles size={15} />
-            Smart Resume Parser
-          </div>
+        {/* State 1: Processing */}
+        {isProcessing && <ProcessingState file={selectedFile} />}
 
-          <h1>
-            Turn your resume into
-            <span> structured data.</span>
-          </h1>
+        {/* State 2: Analysis Complete (Result Dashboard) */}
+        {!isProcessing && isComplete && resumeData && (
+          <ResumeResult resumeData={resumeData} onReset={handleReset} />
+        )}
 
-          <p>
-            Upload your resume and let our parser extract your
-            personal details, skills, education, and work experience.
-          </p>
-        </section>
+        {/* State 3: Error State */}
+        {!isProcessing && error && (
+          <ErrorState error={error} onRetry={handleRetry} />
+        )}
 
-        {/* Upload Card */}
-        <section className="upload-section">
-          <div
-            className={`upload-box ${isDragging ? "dragging" : ""}`}
-            onDragOver={(event) => {
-              event.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-          >
-            {!file ? (
-              <>
-                <div className="upload-icon">
-                  <Upload size={30} />
-                </div>
-
-                <h3>Drop your resume here</h3>
-
-                <p>
-                  or click the button below to browse your files
-                </p>
-
-                <label className="upload-button">
-                  <Upload size={18} />
-                  Choose Resume
-                  <input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleInputChange}
-                    hidden
-                  />
-                </label>
-
-                <div className="file-types">
-                  <span>
-                    <FileText size={15} />
-                    PDF
-                  </span>
-
-                  <span>
-                    <FileImage size={15} />
-                    JPG
-                  </span>
-
-                  <span>
-                    <FileImage size={15} />
-                    PNG
-                  </span>
-                </div>
-              </>
-            ) : (
-              <div className="selected-file">
-                <div className="selected-file-icon">
-                  {file.type === "application/pdf" ? (
-                    <FileText size={28} />
-                  ) : (
-                    <FileImage size={28} />
-                  )}
-                </div>
-
-                <div className="file-info">
-                  <h3>{file.name}</h3>
-
-                  <p>
-                    {(file.size / 1024).toFixed(1)} KB
-                  </p>
-                </div>
-
-                <button
-                  className="remove-button"
-                  onClick={removeFile}
-                  title="Remove file"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {file && (
-            <button className="analyze-button">
-              <Sparkles size={18} />
-              Analyze Resume
-            </button>
-          )}
-        </section>
-
-        {/* Features */}
-        <section className="features">
-          <div className="feature-card">
-            <div className="feature-icon">
-              <Zap size={20} />
-            </div>
-
-            <div>
-              <h4>Fast Processing</h4>
-              <p>
-                Extract resume information quickly.
-              </p>
-            </div>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon">
-              <ShieldCheck size={20} />
-            </div>
-
-            <div>
-              <h4>Simple & Private</h4>
-              <p>
-                No account or login required.
-              </p>
-            </div>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon">
-              <FileText size={20} />
-            </div>
-
-            <div>
-              <h4>Structured Output</h4>
-              <p>
-                Get clean and consistent JSON.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Supported Files */}
-        <div className="notice">
-          <AlertCircle size={17} />
-          <span>
-            Supported formats: PDF, JPG and PNG
-          </span>
-        </div>
+        {/* State 4: Default Upload State */}
+        {!isProcessing && !isComplete && !error && (
+          <UploadBox
+            file={selectedFile}
+            onFileSelect={handleFileSelect}
+            onFileRemove={handleFileRemove}
+            onAnalyze={handleAnalyze}
+            inlineError={inlineError}
+            onClearError={() => setInlineError(null)}
+          />
+        )}
       </main>
 
+      {/* Footer */}
       <footer>
         Resume Analyzer · Built for resume parsing assessment
       </footer>
